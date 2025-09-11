@@ -34,10 +34,10 @@ The core of this project is a custom 3D-printed enclosure (design files not incl
 
 ### PCB Shield (Gerber Files)
 
-The `Joystick_board` archive contains all the necessary manufacturing files for the custom PCB shield. This shield is designed to sit on top of the Arduino Pro Micro, simplifying the connections for the MPU-6050, potentiometer, and buttons.
+The `Joystick_board.zip` archive contains all the necessary manufacturing files for the custom PCB shield. This shield is designed to sit on top of the Arduino Pro Micro, simplifying the connections for the MPU-6050, potentiometer, and buttons.
 
 **To order the PCB:**
-1.  Download and extract the `Joystick_board` file.
+1.  Download and extract the `Joystick_board.zip` file.
 2.  Upload the contents of the extracted folder (the `.gbr` files) to your preferred PCB fabrication service (e.g., JLCPCB, PCBWay, OSH Park).
 3.  Ensure you select appropriate manufacturing parameters (e.g., 2-layer board, FR-4 material).
 
