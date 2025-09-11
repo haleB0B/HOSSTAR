@@ -34,10 +34,10 @@ The core of this project is a custom 3D-printed enclosure (design files not incl
 
 ### PCB Shield (Gerber Files)
 
-The `gimballess_joystick_pcb_shield_gerber_files.zip` archive contains all the necessary manufacturing files for the custom PCB shield. This shield is designed to sit on top of the Arduino Pro Micro, simplifying the connections for the MPU-6050, potentiometer, and buttons.
+The `Yoke_Pro_Micro_-_new.zip` archive contains all the necessary manufacturing files for the custom PCB shield. This shield is designed to sit on top of the Arduino Pro Micro, simplifying the connections for the MPU-6050, potentiometer, and buttons.
 
 **To order the PCB:**
-1.  Download and extract the `gimballess_joystick_pcb_shield_gerber_files.zip` file.
+1.  Download and extract the `Yoke_Pro_Micro_-_new.zip` file.
 2.  Upload the contents of the extracted folder (the `.gbr` files) to your preferred PCB fabrication service (e.g., JLCPCB, PCBWay, OSH Park).
 3.  Ensure you select appropriate manufacturing parameters (e.g., 2-layer board, FR-4 material).
 
