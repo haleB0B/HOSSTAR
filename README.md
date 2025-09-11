@@ -117,6 +117,8 @@ Detailed assembly instructions are outside the scope of this README, as they dep
 3.  **Wire external components:** Connect the potentiometer, 5-way switch, and tactile buttons to the appropriate pins on the PCB shield using jumper wires.
 4.  **Enclosure:** Integrate the assembled electronics into your 3D-printed flightstick handle.
 
+Find some more details around this project here: https://www.instructables.com/The-Gimbal-less-Joystick-Redefining-Control-With-a/
+
 ## Usage
 
 After successfully uploading the firmware and assembling the hardware:
