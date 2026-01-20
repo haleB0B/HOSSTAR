@@ -1,149 +1,145 @@
-# Gimbal-less Flightstick Project
+# Gimbal-less Flightstick Project (v4.4)
 
-This repository contains the necessary files to build a compact, 3D-printable, gimbal-less flightstick controller based on the Arduino Pro Micro, leveraging an MPU-6050 for pitch and roll sensing, along with traditional potentiometers and buttons for additional controls.
+This repository contains the necessary files to build a compact, 3D-printable, gimbal-less flightstick controller based on the Arduino Pro Micro. It leverages an **MPU-6050** for pitch and roll sensing, reducing mechanical complexity, while offering advanced software features like dynamic rudder modes, ambidextrous support, and smart safety cutoffs.
 
 ## Table of Contents
 
 - [Features](#features)
 - [Hardware](#hardware)
-  - [PCB Shield (Gerber Files)](#pcb-shield-gerber-files)
+  - [PCB Shield](#pcb-shield-gerber-files)
   - [BOM (Bill of Materials)](#bom-bill-of-materials)
 - [Firmware](#firmware)
-  - [Compatibility](#compatibility)
   - [Dependencies](#dependencies)
-  - [Configuration](#configuration)
-  - [Uploading the Firmware](#uploading-the-firmware)
-- [Assembly](#assembly)
-- [Usage](#usage)
+  - [Configuration (The Setup Menu)](#configuration-the-setup-menu)
+  - [Advanced: Custom Device Name](#advanced-custom-device-name)
+  - [Uploading](#uploading-the-firmware)
+- [Usage Guide](#usage-guide)
+  - [Flight Modes](#flight-modes)
+  - [Safety Features](#safety-features)
+  - [Hand-Swapping](#hand-swapping)
 - [Contributing](#contributing)
 - [License](#license)
-- [Acknowledgements](#acknowledgements)
+
+---
 
 ## Features
 
-* **Gimbal-less Design:** Utilizes an MPU-6050 IMU for pitch and roll sensing, reducing mechanical complexity and size.
-* **Arduino Pro Micro Based:** Easy to program and widely supported.
-* **Custom PCB Shield:** Simplifies wiring and assembly for a cleaner build.
-* **Configurable Controls:** Supports a thrust/rudder potentiometer, 5-way HAT switch, and multiple tactile buttons.
-* **EEPROM Storage:** Saves calibration and configuration settings for persistence across power cycles.
-* **USB HID Joystick:** Recognized as a standard joystick by your operating system, no special drivers needed.
+* **Gimbal-less Design:** Utilizes an MPU-6050 IMU for pitch and roll sensing. No complex springs or gimbals required.
+* **Dual Rudder Modes:**
+    * *Pot Swap:* Potentiometer controls Throttle, but swaps to Rudder when a modifier is held.
+    * *Roll-to-Yaw:* Leaning the stick controls Pitch/Roll, but swaps Roll to Rudder when a modifier is held (great for space sims).
+* **Ambidextrous:** Runtime toggling between Left-Handed and Right-Handed operation (inverts throttle logic).
+* **Smart Safety:**
+    * **Cutoff:** Automatically centers controls if the stick falls over (>80° tilt).
+    * **Rolling Average:** Optionally holds the average of the last 3 seconds of input instead of snapping to neutral.
+    * **Hysteresis:** Requires the stick to be upright (<15°) to re-engage controls.
+* **Hardware Agnostic:** "Learn Mode" allows you to map buttons to any pin via the software menu without recoding.
+* **Full Customization:** Invert axes, tune sensitivity (Kalman filter), and adjust deadzones via the Serial Menu.
 
 ## Hardware
 
-The core of this project is a custom 3D-printed enclosure (design files not included in this repo, but mentioned for context) housing the electronics.
+The core of this project is a custom 3D-printed enclosure housing the electronics.
 
 ### PCB Shield (Gerber Files)
 
-The `Joystick_board.zip` archive contains all the necessary manufacturing files for the custom PCB shield. This shield is designed to sit on top of the Arduino Pro Micro, simplifying the connections for the MPU-6050, potentiometer, and buttons.
+The `Joystick_board.zip` archive contains the manufacturing files for the custom PCB shield. This shield sits on top of the Arduino Pro Micro to simplify wiring.
 
-**To order the PCB:**
-1.  Download and extract the `Joystick_board.zip` file.
-2.  Upload the contents of the extracted folder (the `.gbr` files) to your preferred PCB fabrication service (e.g., JLCPCB, PCBWay, OSH Park).
-3.  Ensure you select appropriate manufacturing parameters (e.g., 2-layer board, FR-4 material).
-
-The PCB is designed with footprints for:
-* Arduino Pro Micro (via pin headers)
-* MPU-6050 module (I2C connection)
-* Pin headers for connecting the potentiometer and tactile buttons.
+**To order:** Upload the `.gbr` files to a service like JLCPCB or PCBWay. Standard 2-layer FR-4 settings work fine.
 
 ### BOM (Bill of Materials)
 
-Here's a breakdown of the electronic components required for this project:
+| Component | Quantity | Description |
+| :--- | :--- | :--- |
+| **Arduino Pro Micro** | 1 | 5V/16MHz version (ATmega32U4). |
+| **MPU-6050 Module** | 1 | GY-521 or similar breakout board (I2C). |
+| **10kΩ Potentiometer** | 1 | Linear taper (B10K). Used for Throttle/Rudder. |
+| **5-Way Navigation Switch** | 1 | "Coolie Hat" switch (Up, Down, Left, Right, Press). |
+| **Tactile Buttons** | 4 | Activation, Modifiers (L/R), and Set/Reset buttons. |
+| **PCB / Wires** | - | Custom PCB or perfboard + jumper wires. |
 
-| Component                    | Quantity | Notes / Description                                                                   |
-| :--------------------------- | :------- | :------------------------------------------------------------------------------------ |
-| **Core Components** |          |                                                                                       |
-| Arduino Pro Micro            | 1        | 5V/16MHz version is recommended. This is the brain of the controller.                 |
-| MPU-6050 Module              | 1        | 3-axis Gyroscope & Accelerometer. Used for pitch and roll (via I2C).                  |
-| **Inputs** |          |                                                                                       |
-| 10kΩ Potentiometer           | 1        | A linear taper pot is best. Used for the Thrust/Rudder lever.                         |
-| 5-Way Navigation Switch      | 1        | For the Coolie HAT switch (Up, Down, Left, Right, and Center Press).                  |
-| Tactile Push Buttons         | 4        | For Activation, Rudder Modifiers (x2), and a general-purpose button.                  |
-| **Assembly & Connection** |          |                                                                                       |
-| Custom PCB Shield (from Gerbers) | 1      | The custom board to solder connectors, Arduino, and IMU I2C.                          |
-| Pin headers/sockets          | As needed| Use pins on the PCB for pushbuttons, potentiometer, and sockets for the Arduino.      |
-| Jumper Wires                 | 1 pack   | A female-to-female assortment is most useful if you use pin sockets on the PCB.       |
-| Micro USB Cable              | 1        | To connect the Pro Micro to your computer for programming and use.                    |
+---
 
 ## Firmware
 
-The `Pro_Micro_Joystick_v2_8` folder contains the Arduino Sketch (firmware) for the gimbal-less flightstick.
-
-### Compatibility
-
-This firmware is designed specifically for the **Arduino Pro Micro (ATmega32U4)**. It leverages the native USB capabilities of this microcontroller to act as a HID (Human Interface Device) joystick.
+The code has been updated to **Version 4.4**.
 
 ### Dependencies
 
-Before compiling, you need to install the following libraries in your Arduino IDE:
+Install these libraries via the Arduino IDE Library Manager:
 
-1.  **`Joystick.h`**: This library is usually included with the Arduino IDE for ATmega32U4 boards, but ensure it's available. It handles the USB HID joystick communication.
-2.  **`Wire.h`**: Standard Arduino library for I2C communication (required for MPU-6050).
-3.  **`Adafruit_ADS1015.h`**: Required if you use an external ADC for higher precision inputs. If your design relies solely on the Pro Micro's internal ADC, this might be optional or removed.
-    * *Installation:* Go to `Sketch > Include Library > Manage Libraries...` and search for "Adafruit ADS1015".
-4.  **`EEPROM.h`**: Standard Arduino library for reading and writing to the EEPROM (for configuration storage).
-5.  **`MPU6050_light.h`** (or similar MPU-6050 library): A library to easily interface with the MPU-6050.
-    * *Installation:* Go to `Sketch > Include Library > Manage Libraries...` and search for "MPU6050_light" or your preferred MPU6050 library.
+1.  **`Joystick`** by MHeironimus (Handles USB HID communication).
+2.  **`Adafruit MPU6050`** by Adafruit (Sensor driver).
+3.  **`Adafruit Unified Sensor`** by Adafruit (Base sensor class).
+4.  **`Wire`** & **`EEPROM`** (Built-in standard libraries).
 
-### Configuration
+### Configuration (The Setup Menu)
 
-Open the `Pro_Micro_Joystick_v2_8.ino` file in the Arduino IDE.
+You do not need to edit the code to change settings. This firmware features a **Serial Setup Menu**.
 
-* **`FIRMWARE_VERSION`**: Defined on line 15, indicates the firmware version.
-* **`JoystickConfig` Struct**: (Lines 18-22) Defines the structure for configuration data stored in EEPROM, including version, lean angle, handedness, and Kalman filter level.
-* **Pin Definitions**: (Lines 31-41) Crucially, these lines define which physical pins on the Arduino Pro Micro are connected to your joystick's components. **Adjust these values to match your PCB and wiring if you deviate from the original design.**
-    * `THRUST_UP_PIN`, `THRUST_DOWN_PIN`: For the thrust/rudder potentiometer.
-    * `COOLIE_UP_PIN`, `COOLIE_DOWN_PIN`, `COOLIE_LEFT_PIN`, `COOLIE_RIGHT_PIN`, `COOLIE_PRESS_PIN`: For the 5-way navigation switch.
-    * `SET_BUTTON_PIN`: A special button for entering configuration/calibration modes.
-    * `RST_BUTTON_PIN`: Reset button (often tied to the Pro Micro's reset).
-    * `BUTTON_1_PIN`, `BUTTON_2_PIN`, `BUTTON_3_PIN`, `BUTTON_4_PIN`: General-purpose buttons.
+1.  Unplug the joystick.
+2.  Hold the **Activation Button** (Pin 14 by default).
+3.  Plug the joystick in while holding the button.
+4.  Open **Serial Monitor** in Arduino IDE (Set to **115200 baud**).
+5.  Release the button when the menu appears.
+
+**Menu Options:**
+* **1. Lean Angle:** Set physical tilt required for 100% input (20°-60°).
+* **2. Handedness:** Toggles Throttle direction (Push-to-Thrust vs Pull-to-Thrust).
+* **3. Responsiveness:** Tunes the Kalman filter (Smooth, Quick, Fastest).
+* **4. Pickup Threshold:** Sensitivity for "catching" the throttle after a mode swap.
+* **5. Rudder Mode:** Switch between "Pot Swap" and "Roll-to-Yaw".
+* **6. Remap Buttons:** Interactive wizard to assign pins to functions. (Type 's' to skip buttons you haven't wired).
+* **7. Invert Axes:** Invert Pitch, Roll, or Throttle direction.
+* **8. Test Inputs:** Debug screen to verify wiring.
+* **9. Smart Safety:** Toggle between "Snap to Neutral" or "Hold 3s Average" on cutoff.
+* **10. Safety Angle:** Adjust the angle at which safety cutoff triggers (50°-89°).
+
+### Advanced: Custom Device Name
+
+To make Windows display "My Custom Stick" instead of "Arduino Leonardo", you must edit the `boards.txt` file in your Arduino hardware folder.
+1.  Locate `boards.txt` for SparkFun AVR Boards.
+2.  Find the `promicro` section.
+3.  Change `build.pid` (increment the last digit, e.g., `0x9207`).
+4.  Change `build.usb_product` to your desired name.
+5.  Re-upload the firmware.
 
 ### Uploading the Firmware
 
-1.  Connect your Arduino Pro Micro to your computer using a Micro USB cable.
-2.  Open the `Pro_Micro_Joystick_v2_8.ino` file in the Arduino IDE.
-3.  Go to `Tools > Board` and select `Arduino Leonardo` (the Pro Micro uses the same ATmega32U4 chip).
-4.  Go to `Tools > Port` and select the serial port corresponding to your Pro Micro.
-5.  Click the "Upload" button (right arrow icon).
+1.  Select Board: **SparkFun Pro Micro** (or Arduino Leonardo).
+2.  Select Port: Your COM port.
+3.  Upload `Pro_Micro_Joystick_v4_4.ino`.
 
-Once uploaded, your Pro Micro should be recognized by your operating system as a standard USB joystick.
+---
 
-## Assembly
+## Usage Guide
 
-Detailed assembly instructions are outside the scope of this README, as they depend heavily on the 3D-printed enclosure design (not provided here). However, the general steps involve:
+### Flight Modes (Rudder Logic)
+* **Mode 0 (Pot Swap):**
+    * *Standard:* Tilt = Pitch/Roll, Pot = Throttle.
+    * *Modifier Held:* Pot = Rudder (Throttle freezes).
+* **Mode 1 (Roll-to-Yaw):**
+    * *Standard:* Tilt = Pitch/Roll, Pot = Throttle.
+    * *Modifier Held:* Tilt Left/Right = Rudder (Roll freezes).
 
-1.  **Solder components to the PCB shield:** Install the MPU-6050, pin headers for the Arduino Pro Micro, and other connection pins.
-2.  **Mount the Arduino Pro Micro:** Plug the Pro Micro onto the soldered pin headers of the PCB shield.
-3.  **Wire external components:** Connect the potentiometer, 5-way switch, and tactile buttons to the appropriate pins on the PCB shield using jumper wires.
-4.  **Enclosure:** Integrate the assembled electronics into your 3D-printed flightstick handle.
+### Safety Features
+* **Desk Mode:** If you lay the controller down (>80° tilt), outputs cut to Neutral (or 3s Average if "Smart Safety" is ON).
+* **Wake Up:** To regain control, pick the controller up and hold it upright (<15°) for a moment.
+* **Panic Reset:** Press the **Reset Button** (or Coolie Hat Press) to instantly center the Rudder trim.
 
-Find some more details around this project here: https://www.instructables.com/The-Gimbal-less-Joystick-Redefining-Control-With-a/
+### Hand-Swapping
+* To switch hands mid-flight without unplugging: **Hold the SET Button for 3 seconds**.
+* The LED will flash, and the throttle direction will invert.
+* *Note:* The throttle output will freeze until you move the physical pot to "catch" the value, preventing sudden engine surges.
 
-## Usage
-
-After successfully uploading the firmware and assembling the hardware:
-
-1.  Plug the flightstick into your computer via USB.
-2.  Open your operating system's joystick calibration utility (e.g., "Set up USB game controllers" on Windows) to verify functionality and calibrate if necessary.
-3.  Launch your favorite flight simulator or game and configure the joystick axes and buttons.
+---
 
 ## Contributing
 
-Contributions are welcome! If you have improvements, bug fixes, or new features, please:
-
-1.  Fork the repository.
-2.  Create a new branch (`git checkout -b feature/AmazingFeature`).
-3.  Make your changes.
-4.  Commit your changes (`git commit -m 'Add some AmazingFeature'`).
-5.  Push to the branch (`git push origin feature/AmazingFeature`).
-6.  Open a Pull Request.
+1.  Fork the repo.
+2.  Create a branch (`git checkout -b feature/NewFeature`).
+3.  Commit changes.
+4.  Push and open a Pull Request.
 
 ## License
 
 This project is open-source and licensed under the [MIT License](LICENSE.md).
-
-## Acknowledgements
-
-* Thanks to the Arduino community for the IDE and core libraries.
-* Thanks to Adafruit for the ADS1015 library.
-* Inspiration drawn from various custom flightstick and Arduino HID projects.
